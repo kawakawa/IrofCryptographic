@@ -16,6 +16,9 @@ namespace IrofCryptographic.Model.Twitter
 
         private TwitterContext _context;
 
+        private List<LinqToTwitter.Status> _targetUserTweetList =new List<LinqToTwitter.Status>();
+
+
         /// <summary>
         /// Twitterと接続
         /// </summary>
@@ -30,9 +33,8 @@ namespace IrofCryptographic.Model.Twitter
 
 
 
-        public List<LinqToTwitter.Status> GetAllTimeLineData(string targetUserId)
+        public void GetAllTimeLineData(string targetUserId)
         {
-            var list = new List<LinqToTwitter.Status>();
             
             var auth = Authorizer.DoApplicationOnly();
 
@@ -40,7 +42,7 @@ namespace IrofCryptographic.Model.Twitter
 
             var twitterCtx = new TwitterContext(auth);
 
-            var subscribedList = twitterCtx.Status
+            var list = twitterCtx.Status
 
                 .Where(n => n.Type == StatusType.User)
                 .Where(n => n.ScreenName == targetUserId)
@@ -48,9 +50,25 @@ namespace IrofCryptographic.Model.Twitter
 
                 .ToList();
 
-            return subscribedList; 
+            _targetUserTweetList = list;
         }
 
+
+
+        public Status GetRandomStatus()
+        {
+            if (this._targetUserTweetList.Count == 0)
+            {
+                return null;
+            }
+
+
+            var rand = new Random();
+            int toSkip = rand.Next(0, this._targetUserTweetList.Count-1);
+
+            var status=this._targetUserTweetList.Skip(toSkip).Take(1).FirstOrDefault();
+            return status;
+        }
 
     }
 }
