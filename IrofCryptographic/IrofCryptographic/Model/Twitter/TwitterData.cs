@@ -57,6 +57,12 @@ namespace IrofCryptographic.Model.Twitter
 
         public Status GetRandomStatus()
         {
+            return GetRandomStatus("");
+        }
+
+
+        internal Status GetRandomStatus(string statusIDString)
+        {
             if (this._targetUserTweetList.Count == 0)
             {
                 return null;
@@ -64,11 +70,14 @@ namespace IrofCryptographic.Model.Twitter
 
 
             var rand = new Random();
-            int toSkip = rand.Next(0, this._targetUserTweetList.Count-1);
+            int toSkip = rand.Next(0, this._targetUserTweetList.Count - 1);
 
-            var status=this._targetUserTweetList.Skip(toSkip).Take(1).FirstOrDefault();
+            var status = this._targetUserTweetList
+                             .Skip(toSkip)
+                             .Where(n => n.StatusID != statusIDString)
+                             .Take(1)
+                             .FirstOrDefault();
             return status;
         }
-
     }
 }
