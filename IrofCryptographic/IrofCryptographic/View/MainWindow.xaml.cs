@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using IrofCryptographic.ViewModel;
 
 namespace IrofCryptographic.View
 {
@@ -23,6 +24,22 @@ namespace IrofCryptographic.View
         public MainWindow()
         {
             InitializeComponent();
+
+            var vModel = new MainWindowViewModel();
+            this.DataContext = vModel;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            
+
+            //var t = new Model.Twitter.TwitterData();
+            //t.Open();
+            
+            //var t2 = t.GetAllTimeLineData("irof");
+
+
+            //this.log.Text = t2.Count.ToString();
         }
     }
 }

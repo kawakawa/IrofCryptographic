@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using IrofCryptographic.Command;
@@ -13,16 +14,17 @@ namespace IrofCryptographic.ViewModel
      public class MainWindowViewModel:BaseViewModel
      {
 
+
          //秘密キー
          private LinqToTwitter.Status localKeyA;
          private LinqToTwitter.Status localKeyB;
 
-         //公開キー
-         private String publicKey = "";
+         //秘密キー
+         private string localKey;
 
 
          /// <summary>
-         /// 公開キー作成
+         /// キー作成
          /// </summary>
          private ICommand _publicKeyCreateCommand;
          public ICommand publicKeyCreateCommand
@@ -31,7 +33,7 @@ namespace IrofCryptographic.ViewModel
             {
                 if(_publicKeyCreateCommand == null)
                 {
-                    _publicKeyCreateCommand = new DelegateCommand(this.createLocalKey);
+                    _publicKeyCreateCommand = new DelegateCommand(this.createKey);
                 }
                 return _publicKeyCreateCommand;
             }
@@ -45,16 +47,17 @@ namespace IrofCryptographic.ViewModel
 
 
          /// <summary>
-         /// 秘密キー作成
+         /// キー作成
          /// </summary>
-         private void createLocalKey()
+         private void createKey()
          {
              var twitter = new TwitterData();
              twitter.Open();
              twitter.GetAllTimeLineData("irof");
 
              localKeyA = twitter.GetRandomStatus();
-             localKeyB = twitter.GetRandomStatus();
+             localKeyB = twitter.GetRandomStatus(localKeyA.StatusID);
+
 
              //画面描画
 
@@ -62,7 +65,15 @@ namespace IrofCryptographic.ViewModel
              //公開キー作成
              this.createPublicKey();
 
+             //あんごうか
+             var hoge = this.Encript("AAA");
+
+             var hoge2 = Decript(hoge);
+
          }
+
+
+
 
          private void createPublicKey()
          {
@@ -70,7 +81,7 @@ namespace IrofCryptographic.ViewModel
              var hashB = this.getHash(this.localKeyB.Text);
 
              var byteKey = this.getXor(hashA, hashB);
-             publicKey = Encoding.ASCII.GetString(byteKey);
+             this.localKey = System.Convert.ToBase64String(byteKey);
          }
 
 
@@ -114,6 +125,66 @@ namespace IrofCryptographic.ViewModel
                  }
              }
              return result;
+         }
+
+
+
+
+         public string Encript(string targetTxt)
+         {
+             var tmp = Convert.FromBase64String(this.localKey);
+
+             using (SymmetricAlgorithm rc2Csp = new RC2CryptoServiceProvider())
+             {
+                 rc2Csp.Key = getByts(tmp,3, tmp.Length);
+                 rc2Csp.IV = getByts(tmp,0, 7);
+
+                 using (ICryptoTransform encryptor = rc2Csp.CreateEncryptor())
+                 {
+                     byte[] source = Encoding.UTF8.GetBytes(targetTxt);
+                     byte[] encrypted = encryptor.TransformFinalBlock(source, 0, source.Length);
+
+                     return  Convert.ToBase64String(encrypted);
+                 }
+
+             }
+             return "";
+         }
+
+
+
+         private byte[] getByts(byte[] target,int begin, int end)
+         {
+             var query = target.Select((n, index) => new {index, n})
+                 .Where(n => n.index >= begin)
+                 .Where(n => n.index <= end)
+                 .Select(n => n.n)
+                 .ToArray();
+
+             return query;
+
+         }
+
+
+
+         public string Decript(string encryptoTxt)
+         {
+             var tmp = Convert.FromBase64String(this.localKey);
+
+             using (SymmetricAlgorithm rc2Csp = new RC2CryptoServiceProvider())
+             {
+                 rc2Csp.Key = getByts(tmp, 3, tmp.Length);
+                 rc2Csp.IV = getByts(tmp, 0, 7);
+
+                 using (ICryptoTransform encryptor = rc2Csp.CreateDecryptor())
+                 {
+                     byte[] source = Convert.FromBase64String(encryptoTxt);
+                     byte[] decrypted = encryptor.TransformFinalBlock(source, 0, source.Length);
+
+                     return Encoding.UTF8.GetString(decrypted);
+                 }
+             }
+             return "";
 
          }
 
