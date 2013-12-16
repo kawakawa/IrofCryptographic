@@ -68,8 +68,8 @@ namespace IrofCryptographic.Model.Twitter
                 return null;
             }
 
-
-            var rand = new Random();
+            int seed = Environment.TickCount;
+            var rand = new Random(seed);
             int toSkip = rand.Next(0, this._targetUserTweetList.Count - 1);
 
             var status = this._targetUserTweetList
