@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -22,6 +23,66 @@ namespace IrofCryptographic.ViewModel
          //秘密キー
          private string localKey;
 
+         public string LocalKey
+         {
+             set
+             {
+                 this.localKey = value;
+                 OnPropertyChanged("LocalKey");
+             }
+             get
+             {
+                 return this.localKey;
+             }
+         }
+
+         public string NormalTxt
+         {
+             set;
+             get;
+         }
+
+         private string encryptTxt;
+
+         public  string EncryptTxt 
+         {
+             get
+             {
+                 return this.encryptTxt;
+             }
+             set
+             {
+                 this.encryptTxt = value;
+                 OnPropertyChanged("EncryptTxt");
+             }
+    
+         }
+
+
+
+
+         public string EncryptTxt2
+         {
+             get; set;
+
+         }
+
+         private string normalTxt2;
+         public string NormalTxt2
+         {
+             get
+             {
+                 return this.normalTxt2;
+             }
+             set
+             {
+                 this.normalTxt2 = value;
+                 OnPropertyChanged("NormalTxt2");
+             }
+         }
+
+
+
 
          /// <summary>
          /// キー作成
@@ -39,10 +100,65 @@ namespace IrofCryptographic.ViewModel
             }
         }
 
+         /// <summary>
+         /// 暗号化
+         /// </summary>
+         private ICommand _EncryptCommand;
+
+         public ICommand EncryptCommand
+         {
+             get
+             {
+                 if (_EncryptCommand == null)
+                 {
+                     _EncryptCommand=new DelegateCommand(this.doEncrypt);
+                 }
+                 return _EncryptCommand;
+             }
+         }
 
 
+         private ICommand _decryptCommand;
+
+         public ICommand DecryptCommand
+         {
+             get
+             {
+                 if (_decryptCommand == null)
+                 {
+                     _decryptCommand=new DelegateCommand(this.doDecrypt);
+                 }
+                 return _decryptCommand;
+             }
+         }
 
 
+         private string _urlA;
+
+         public string UrlA
+         {
+             get
+             {
+                 return this._urlA;
+             }
+             set
+             {
+                 this._urlA = value;
+                 OnPropertyChanged("UrlA");
+             }
+         }
+
+
+         public Action<string> SetWebBrowserA
+         {
+             get;
+             set;
+         }
+         public Action<string> SetWebBrowserB
+         {
+             get;
+             set;
+         }
 
 
 
@@ -60,13 +176,14 @@ namespace IrofCryptographic.ViewModel
 
 
              //画面描画
-
+             SetWebBrowserA("https://twitter.com/irof/statuses/"+localKeyA.StatusID);
+             SetWebBrowserB("https://twitter.com/irof/statuses/" + localKeyB.StatusID);
 
              //公開キー作成
              this.createPublicKey();
 
              //あんごうか
-             var hoge = this.Encript("AAA");
+             var hoge = this.Encript("WE　ラブ　いろふ");
 
              var hoge2 = Decript(hoge);
 
@@ -81,7 +198,7 @@ namespace IrofCryptographic.ViewModel
              var hashB = this.getHash(this.localKeyB.Text);
 
              var byteKey = this.getXor(hashA, hashB);
-             this.localKey = System.Convert.ToBase64String(byteKey);
+             this.LocalKey = System.Convert.ToBase64String(byteKey);
          }
 
 
@@ -134,12 +251,12 @@ namespace IrofCryptographic.ViewModel
          {
              var tmp = Convert.FromBase64String(this.localKey);
 
-             using (SymmetricAlgorithm rc2Csp = new RC2CryptoServiceProvider())
+             using (SymmetricAlgorithm cspAlgorithm = new AesManaged())
              {
-                 rc2Csp.Key = getByts(tmp,3, tmp.Length);
-                 rc2Csp.IV = getByts(tmp,0, 7);
+                 cspAlgorithm.Key = getByts(tmp,0, tmp.Length);
+                 cspAlgorithm.IV = getByts(tmp, 0, tmp.Length);
 
-                 using (ICryptoTransform encryptor = rc2Csp.CreateEncryptor())
+                 using (ICryptoTransform encryptor = cspAlgorithm.CreateEncryptor())
                  {
                      byte[] source = Encoding.UTF8.GetBytes(targetTxt);
                      byte[] encrypted = encryptor.TransformFinalBlock(source, 0, source.Length);
@@ -148,7 +265,6 @@ namespace IrofCryptographic.ViewModel
                  }
 
              }
-             return "";
          }
 
 
@@ -171,12 +287,12 @@ namespace IrofCryptographic.ViewModel
          {
              var tmp = Convert.FromBase64String(this.localKey);
 
-             using (SymmetricAlgorithm rc2Csp = new RC2CryptoServiceProvider())
+             using (SymmetricAlgorithm cspAlgorithm = new AesManaged())
              {
-                 rc2Csp.Key = getByts(tmp, 3, tmp.Length);
-                 rc2Csp.IV = getByts(tmp, 0, 7);
+                 cspAlgorithm.Key = getByts(tmp, 0, tmp.Length);
+                 cspAlgorithm.IV = getByts(tmp, 0, tmp.Length);
 
-                 using (ICryptoTransform encryptor = rc2Csp.CreateDecryptor())
+                 using (ICryptoTransform encryptor = cspAlgorithm.CreateDecryptor())
                  {
                      byte[] source = Convert.FromBase64String(encryptoTxt);
                      byte[] decrypted = encryptor.TransformFinalBlock(source, 0, source.Length);
@@ -184,12 +300,20 @@ namespace IrofCryptographic.ViewModel
                      return Encoding.UTF8.GetString(decrypted);
                  }
              }
-             return "";
 
          }
 
+         private void doEncrypt()
+         {
+             var encryptedText = this.Encript(this.NormalTxt);
+             this.EncryptTxt = encryptedText;
+         }
 
-
+         private void doDecrypt()
+         {
+             var normal = Decript(this.EncryptTxt2);
+             this.NormalTxt2 = normal;
+         }
 
     }
 }

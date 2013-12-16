@@ -26,7 +26,12 @@ namespace IrofCryptographic.View
             InitializeComponent();
 
             var vModel = new MainWindowViewModel();
+
+            vModel.SetWebBrowserA = this.setA;
+            vModel.SetWebBrowserB = this.setB;
+            
             this.DataContext = vModel;
+            
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -40,6 +45,15 @@ namespace IrofCryptographic.View
 
 
             //this.log.Text = t2.Count.ToString();
+        }
+
+        public void setA(string url)
+        {
+            this.webBrowserA.Source=new Uri(url);
+        }
+        public void setB(string url)
+        {
+            this.webBrowserB.Source = new Uri(url);
         }
     }
 }
