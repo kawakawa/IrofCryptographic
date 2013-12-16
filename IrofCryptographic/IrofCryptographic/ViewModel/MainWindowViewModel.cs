@@ -182,11 +182,7 @@ namespace IrofCryptographic.ViewModel
              //公開キー作成
              this.createPublicKey();
 
-             //あんごうか
-             var hoge = this.Encript("WE　ラブ　いろふ");
-
-             var hoge2 = Decript(hoge);
-
+            
          }
 
 
